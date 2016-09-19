@@ -49,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
     private Retrofit retrofit;
     private GankService service;
 
+    private Action1<List<SearchModel.ResultsBean>> action1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,6 +92,25 @@ public class MainActivity extends AppCompatActivity {
         });
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
+        action1 = new Action1<List<SearchModel.ResultsBean>>() {
+            @Override
+            public void call(List<SearchModel.ResultsBean> resultsBeen) {
+                if(page == 1) {
+                    picPathList.clear();
+                }
+                if(resultsBeen == null || resultsBeen.size() <= 0){
+                    adapter.loadComplete();
+                } else {
+                    List<String> list = new ArrayList<>();
+                    for (int i = 0; i < resultsBeen.size(); i++) {
+                        SearchModel.ResultsBean item = resultsBeen.get(i);
+                        Log.e(TAG, "call: " + item.getUrl());
+                        list.add(item.getUrl());
+                    }
+                    adapter.addData(list);
+                }
+            }
+        };
         test2();
     }
 
@@ -103,25 +124,7 @@ public class MainActivity extends AppCompatActivity {
                         return searchModel.getResults();
                     }
                 })
-                .subscribe(new Action1<List<SearchModel.ResultsBean>>() {
-                    @Override
-                    public void call(List<SearchModel.ResultsBean> resultsBeen) {
-                        if(page == 1) {
-                            picPathList.clear();
-                        }
-                        if(resultsBeen == null || resultsBeen.size() <= 0){
-                            adapter.loadComplete();
-                        } else {
-                            List<String> list = new ArrayList<>();
-                            for (int i = 0; i < resultsBeen.size(); i++) {
-                                SearchModel.ResultsBean item = resultsBeen.get(i);
-                                Log.e(TAG, "call: " + item.getUrl());
-                                list.add(item.getUrl());
-                            }
-                            adapter.addData(list);
-                        }
-                    }
-                });
+                .subscribe(action1);
     }
 
     public class MyAdapter extends BaseQuickAdapter<String> {
